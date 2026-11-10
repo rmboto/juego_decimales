@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reto Decimales · 2.º ESO</title>
+<style>
+  /* =========================================================
+     COLORES Y TIPOGRAFÍA (el profesor puede cambiarlos aquí)
+     ========================================================= */
+  :root {
+    --fondo: #eef2f8;          /* fondo de la página */
+    --tarjeta: #ffffff;        /* fondo de las tarjetas */
+    --texto: #1c2434;          /* color principal del texto */
+    --texto-suave: #5a6478;    /* textos secundarios */
+    --primario: #3451c6;       /* botones principales y barra */
+    --primario-osc: #233a99;   /* botón principal al pasar el ratón */
+    --acento: #f2a516;         /* detalles y pistas */
+    --acierto: #1f8a4c;        /* respuesta correcta */
+    --acierto-fondo: #e3f5ea;
+    --error: #c92a3a;          /* respuesta incorrecta */
+    --error-fondo: #fbe6e8;
+    --borde: #d5dbe7;
+    --radio: 16px;
+    --sombra: 0 10px 30px rgba(28, 36, 52, .10);
+    --fuente: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  html { font-size: 18px; }
+  body {
+    margin: 0; min-height: 100vh;
+    font-family: var(--fuente); color: var(--texto);
+    background: var(--fondo);
+    background-image: radial-gradient(circle at 10% 0%, #dfe7fb 0, transparent 40%),
+                      radial-gradient(circle at 100% 100%, #fbefd8 0, transparent 35%);
+    line-height: 1.5;
+  }
+  .contenedor { max-width: 760px; margin: 0 auto; padding: 20px 16px 40px; }
+  .tarjeta {
+    background: var(--tarjeta); border-radius: var(--radio);
+    box-shadow: var(--sombra); padding: 28px 26px;
+    animation: aparecer .35s ease-out;
+  }
+  [hidden] { display: none !important; }
+
+  h1 { font-size: 2.1rem; line-height: 1.15; margin: 0 0 6px; letter-spacing: -.02em; }
+  h2 { font-size: 1.5rem; margin: 0 0 12px; }
+  .subtitulo { color: var(--texto-suave); margin: 0 0 20px; font-size: 1.05rem; }
+  .etiqueta {
+    display: inline-block; font-size: .78rem; font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--primario); background: #e6ebfb;
+    padding: 4px 10px; border-radius: 999px; margin-bottom: 12px;
+  }
+
+  /* ----- Botones ----- */
+  button { font-family: inherit; font-size: 1rem; cursor: pointer; }
+  .btn {
+    border: none; border-radius: 12px; padding: 14px 24px; font-weight: 700;
+    transition: transform .12s ease, background .2s ease, box-shadow .2s ease;
+  }
+  .btn:focus-visible, .opcion:focus-visible, input:focus-visible, .modo:focus-visible {
+    outline: 3px solid var(--acento); outline-offset: 2px;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn-primario { background: var(--primario); color: #fff; box-shadow: 0 4px 14px rgba(52, 81, 198, .35); }
+  .btn-primario:hover { background: var(--primario-osc); }
+  .btn-secundario { background: #fff; color: var(--primario); border: 2px solid var(--primario); }
+  .btn-secundario:hover { background: #eef1fc; }
+  .btn-pista { background: #fff6e4; color: #8a5a00; border: 2px solid #f4cf86; padding: 10px 16px; }
+  .btn-pista:disabled { opacity: .55; cursor: default; }
+  .btn-grande { font-size: 1.15rem; padding: 16px 34px; }
+
+  /* ----- Pantalla inicial ----- */
+  .instrucciones { padding-left: 0; list-style: none; margin: 0 0 22px; }
+  .instrucciones li { padding: 8px 0 8px 38px; position: relative; border-bottom: 1px solid #edf0f6; }
+  .instrucciones li:last-child { border-bottom: none; }
+  .instrucciones li span.num {
+    position: absolute; left: 0; top: 8px; width: 26px; height: 26px; border-radius: 50%;
+    background: var(--primario); color: #fff; font-size: .8rem; font-weight: 700;
+    display: grid; place-items: center;
+  }
+  .modos { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0 0 24px; }
+  .modo {
+    text-align: left; background: #f7f9fd; border: 2px solid var(--borde); border-radius: 12px;
+    padding: 14px; color: var(--texto); transition: border-color .2s, background .2s;
+  }
+  .modo strong { display: block; margin-bottom: 2px; }
+  .modo small { color: var(--texto-suave); font-size: .85rem; }
+  .modo[aria-pressed="true"] { border-color: var(--primario); background: #eef1fc; }
+
+  /* ----- Marcador y progreso ----- */
+  .marcador {
+    display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; align-items: center;
+    margin-bottom: 10px; font-weight: 600;
+  }
+  .chip { background: var(--tarjeta); border-radius: 999px; padding: 6px 14px; box-shadow: var(--sombra); font-size: .92rem; }
+  .chip b { color: var(--primario); }
+  .puntos-anim { display: inline-block; animation: latido .45s ease; }
+  .progreso { height: 12px; background: #dbe2f0; border-radius: 999px; overflow: hidden; margin-bottom: 18px; }
+  .progreso-barra {
+    height: 100%; width: 0; border-radius: 999px;
+    background: linear-gradient(90deg, var(--primario), #6f86ea);
+    transition: width .5s ease;
+  }
+
+  /* ----- Pregunta ----- */
+  .enunciado { font-size: 1.45rem; font-weight: 650; line-height: 1.35; margin: 4px 0 20px; }
+  .opciones { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .opcion {
+    display: flex; align-items: center; gap: 12px; min-height: 64px;
+    text-align: left; padding: 14px 16px; border-radius: 12px; font-size: 1.15rem; font-weight: 600;
+    background: #f7f9fd; color: var(--texto); border: 2px solid var(--borde);
+    transition: border-color .2s, background .2s, transform .12s;
+  }
+  .opcion:hover:not(:disabled) { border-color: var(--primario); background: #eef1fc; }
+  .opcion:disabled { cursor: default; }
+  .opcion .letra {
+    flex: none; width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center;
+    background: #e3e8f4; font-size: .85rem; color: var(--texto-suave);
+  }
+  .opcion.correcta { border-color: var(--acierto); background: var(--acierto-fondo); animation: pop .35s ease; }
+  .opcion.correcta .letra { background: var(--acierto); color: #fff; }
+  .opcion.incorrecta { border-color: var(--error); background: var(--error-fondo); opacity: .85; animation: temblor .35s ease; }
+  .opcion.incorrecta .letra { background: var(--error); color: #fff; }
+
+  .escribir { display: flex; gap: 10px; flex-wrap: wrap; }
+  .escribir input {
+    flex: 1 1 200px; font-size: 1.3rem; padding: 12px 14px; border-radius: 12px;
+    border: 2px solid var(--borde); font-family: inherit; min-width: 0;
+  }
+  .escribir input.incorrecta { border-color: var(--error); animation: temblor .35s ease; }
+  .escribir input.correcta { border-color: var(--acierto); background: var(--acierto-fondo); }
+  .nota-escribir { color: var(--texto-suave); font-size: .88rem; margin: 8px 0 0; }
+
+  .zona-pista { margin-top: 18px; display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-start; }
+  .pista {
+    flex: 1 1 100%; background: #fff8ea; border-left: 5px solid var(--acento);
+    padding: 10px 14px; border-radius: 8px; color: #6b4700; animation: aparecer .3s ease;
+  }
+
+  .feedback { margin-top: 18px; border-radius: 12px; padding: 14px 16px; animation: aparecer .3s ease; }
+  .feedback.ok { background: var(--acierto-fondo); border: 2px solid #9fd8b6; }
+  .feedback.mal { background: var(--error-fondo); border: 2px solid #f1a9b1; }
+  .feedback.aviso { background: #fff3dc; border: 2px solid #f4cf86; }
+  .feedback .titulo { font-weight: 800; font-size: 1.1rem; margin: 0 0 4px; }
+  .feedback p { margin: 0; }
+  .acciones { margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
+
+  /* ----- Pantalla de nivel ----- */
+  .nivel-num { font-size: 4rem; font-weight: 800; color: var(--primario); line-height: 1; margin: 0 0 8px; }
+
+  /* ----- Pantalla final ----- */
+  .resumen { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 18px 0 22px; }
+  .dato { background: #f4f7fc; border-radius: 12px; padding: 14px; text-align: center; }
+  .dato .valor { font-size: 1.9rem; font-weight: 800; color: var(--primario); line-height: 1.1; }
+  .dato .nombre { font-size: .85rem; color: var(--texto-suave); }
+  .niveles-final { margin: 0 0 22px; }
+  .fila-nivel { display: grid; grid-template-columns: 90px 1fr 70px; gap: 10px; align-items: center; margin-bottom: 8px; font-size: .95rem; }
+  .barra-nivel { height: 12px; background: #e3e8f2; border-radius: 999px; overflow: hidden; }
+  .barra-nivel div { height: 100%; background: var(--acierto); border-radius: 999px; transition: width .8s ease; }
+  .recomendaciones { background: #f4f7fc; border-radius: 12px; padding: 16px 18px; margin-bottom: 22px; }
+  .recomendaciones h3 { margin: 0 0 8px; font-size: 1.1rem; }
+  .recomendaciones ul { margin: 0; padding-left: 20px; }
+  .recomendaciones li { margin-bottom: 6px; }
+  details.revision { margin-bottom: 22px; }
+  details.revision summary { cursor: pointer; font-weight: 700; color: var(--primario); padding: 6px 0; }
+  .item-rev { border-bottom: 1px solid #edf0f6; padding: 8px 0; font-size: .95rem; }
+  .item-rev .marca { font-weight: 800; margin-right: 6px; }
+  .item-rev .marca.si { color: var(--acierto); }
+  .item-rev .marca.no { color: var(--error); }
+
+  /* ----- Animaciones discretas ----- */
+  @keyframes aparecer { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: scale(1); } }
+  @keyframes temblor { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+  @keyframes latido { 0% { transform: scale(1); } 50% { transform: scale(1.25); } 100% { transform: scale(1); } }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+  /* ----- Adaptación a móvil ----- */
+  @media (max-width: 600px) {
+    html { font-size: 16px; }
+    .tarjeta { padding: 22px 16px; }
+    h1 { font-size: 1.75rem; }
+    .enunciado { font-size: 1.25rem; }
+    .opciones, .modos { grid-template-columns: 1fr; }
+    .resumen { grid-template-columns: 1fr 1fr; }
+    .resumen .dato:last-child { grid-column: span 2; }
+    .acciones .btn { flex: 1 1 auto; }
+  }
+</style>
+</head>
+<body>
+<main class="contenedor">
+
+  <!-- ================= PANTALLA INICIAL ================= -->
+  <section id="pantalla-inicio" class="tarjeta">
+    <span class="etiqueta">Matemáticas · 2.º ESO</span>
+    <h1>Reto Decimales</h1>
+    <p class="subtitulo">20 preguntas, 4 niveles y unos 30 minutos para demostrar lo que sabes de números decimales. Sin calculadora.</p>
+    <ul class="instrucciones">
+      <li><span class="num">1</span>Hay <b>4 niveles</b> de 5 preguntas cada uno. La dificultad va subiendo.</li>
+      <li><span class="num">2</span>Acierto al primer intento: <b><span id="txt-p1">10</span> puntos</b>. Al segundo intento: <b><span id="txt-p2">5</span> puntos</b>. Tras dos fallos: 0 puntos y verás la explicación.</li>
+      <li><span class="num">3</span>Si te atascas, pulsa <b>«Ver pista»</b>: te orienta sin darte la solución y no resta puntos.</li>
+      <li><span class="num">4</span>Usa papel y lápiz. Al final verás tu puntuación y recomendaciones para seguir mejorando.</li>
+    </ul>
+    <p style="margin:0 0 10px;font-weight:700;">Elige cómo quieres responder:</p>
+    <div class="modos" role="group" aria-label="Modo de juego">
+      <button type="button" class="modo" id="modo-opciones" aria-pressed="true">
+        <strong>Cuatro opciones</strong>
+        <small>Elige la respuesta correcta entre cuatro.</small>
+      </button>
+      <button type="button" class="modo" id="modo-reto" aria-pressed="false">
+        <strong>Modo reto</strong>
+        <small>Escribe tú el número (vale coma o punto). Las preguntas no numéricas mantienen las opciones.</small>
+      </button>
+    </div>
+    <button type="button" class="btn btn-primario btn-grande" id="btn-comenzar">Comenzar</button>
+  </section>
+
+  <!-- ================= PANTALLA DE NIVEL ================= -->
+  <section id="pantalla-nivel" class="tarjeta" hidden>
+    <span class="etiqueta" id="nivel-etiqueta">Nivel</span>
+    <p class="nivel-num" id="nivel-num">1</p>
+    <h2 id="nivel-titulo"></h2>
+    <p class="subtitulo" id="nivel-descripcion"></p>
+    <button type="button" class="btn btn-primario btn-grande" id="btn-empezar-nivel">Empezar nivel</button>
+  </section>
+
+  <!-- ================= PANTALLA DE PREGUNTA ================= -->
+  <section id="pantalla-juego" hidden>
+    <div class="marcador">
+      <span class="chip">Nivel <b id="m-nivel">1</b>/4</span>
+      <span class="chip">Pregunta <b id="m-pregunta">1</b>/<span id="m-total">20</span></span>
+      <span class="chip">Puntos: <b id="m-puntos">0</b></span>
+    </div>
+    <div class="progreso" role="progressbar" aria-label="Progreso del juego" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <div class="progreso-barra" id="barra"></div>
+    </div>
+
+    <article class="tarjeta" id="tarjeta-pregunta">
+      <span class="etiqueta" id="p-tema">Tema</span>
+      <p class="enunciado" id="p-enunciado"></p>
+
+      <div class="opciones" id="p-opciones"></div>
+
+      <div id="p-escribir" hidden>
+        <form class="escribir" id="form-escribir" autocomplete="off">
+          <input type="text" id="input-respuesta" inputmode="decimal" aria-label="Escribe tu respuesta" placeholder="Tu respuesta">
+          <button type="submit" class="btn btn-primario" id="btn-comprobar">Comprobar</button>
+        </form>
+        <p class="nota-escribir">Puedes usar coma o punto decimal (por ejemplo 2,5 o 2.5).</p>
+      </div>
+
+      <div class="zona-pista">
+        <button type="button" class="btn btn-pista" id="btn-pista">💡 Ver pista</button>
+        <div class="pista" id="p-pista" hidden></div>
+      </div>
+
+      <div id="p-feedback" class="feedback" hidden aria-live="polite">
+        <p class="titulo" id="fb-titulo"></p>
+        <p id="fb-texto"></p>
+      </div>
+
+      <div class="acciones">
+        <button type="button" class="btn btn-primario" id="btn-siguiente" hidden>Siguiente →</button>
+      </div>
+    </article>
+  </section>
+
+  <!-- ================= PANTALLA FINAL ================= -->
+  <section id="pantalla-final" class="tarjeta" hidden>
+    <span class="etiqueta">Resultado final</span>
+    <h1 id="f-titulo">¡Reto completado!</h1>
+    <p class="subtitulo" id="f-mensaje"></p>
+    <div class="resumen">
+      <div class="dato"><div class="valor" id="f-puntos">0</div><div class="nombre">puntos de <span id="f-max">200</span></div></div>
+      <div class="dato"><div class="valor" id="f-porcentaje">0 %</div><div class="nombre">de aciertos</div></div>
+      <div class="dato"><div class="valor" id="f-primera">0</div><div class="nombre">aciertos al primer intento</div></div>
+    </div>
+    <h3 style="margin:0 0 10px;">Aciertos por nivel</h3>
+    <div class="niveles-final" id="f-niveles"></div>
+    <div class="recomendaciones">
+      <h3>Recomendaciones</h3>
+      <ul id="f-recomendaciones"></ul>
+    </div>
+    <details class="revision">
+      <summary>Revisar las preguntas y sus soluciones</summary>
+      <div id="f-revision"></div>
+    </details>
+    <button type="button" class="btn btn-primario btn-grande" id="btn-reiniciar">Volver a jugar</button>
+  </section>
+
+</main>
+
+<script>
+"use strict";
+
+/* =========================================================
+   CONFIGURACIÓN (el profesor puede cambiar estos valores)
+   ========================================================= */
+const CONFIG = {
+  PUNTOS_PRIMER_INTENTO: 10,   // puntos si se acierta a la primera
+  PUNTOS_SEGUNDO_INTENTO: 5,   // puntos si se acierta a la segunda
+  PREGUNTAS_POR_NIVEL: 5       // se eligen al azar de cada banco de nivel
+};
+
+/* =========================================================
+   BANCO DE PREGUNTAS
+   - Cada nivel tiene 6 preguntas; en cada partida se eligen 5 al azar,
+     así las partidas no se repiten exactamente.
+   - "opciones": LA PRIMERA OPCIÓN ES SIEMPRE LA CORRECTA.
+     El juego las baraja antes de mostrarlas.
+   - "valor": número correcto para el modo reto (respuesta escrita).
+     Pon null si la respuesta no es un único número.
+   - "tema": se usa para las recomendaciones finales. Debe ser una de las
+     claves de RECOMENDACIONES (más abajo).
+   ========================================================= */
+const NIVELES = [
+  {
+    nombre: "Comparar, redondear, sumar y restar",
+    descripcion: "Calentamiento: valor de posición, orden, redondeo y sumas y restas con la coma bien alineada.",
+    preguntas: [
+      {
+        tema: "comparacion",
+        enunciado: "¿Cuál de estos números es el mayor?",
+        opciones: ["3,9", "3,099", "3,09", "3,089"],
+        valor: 3.9,
+        pista: "Escribe todos con tres cifras decimales (añadiendo ceros) y compáralos cifra a cifra.",
+        explicacion: "3,9 = 3,900, que es mayor que 3,099; 3,090 y 3,089. Importa el valor de cada posición, no cuántas cifras tiene el número."
+      },
+      {
+        tema: "comparacion",
+        enunciado: "Ordena de menor a mayor: 0,7 · 0,07 · 0,707 · 0,77",
+        opciones: [
+          "0,07 < 0,7 < 0,707 < 0,77",
+          "0,07 < 0,707 < 0,7 < 0,77",
+          "0,7 < 0,07 < 0,77 < 0,707",
+          "0,77 < 0,707 < 0,7 < 0,07"
+        ],
+        valor: null,
+        pista: "Completa con ceros hasta tener tres decimales y compáralos como si fueran números enteros.",
+        explicacion: "Con tres decimales: 0,070 < 0,700 < 0,707 < 0,770."
+      },
+      {
+        tema: "redondeo",
+        enunciado: "Redondea 14,365 a las centésimas.",
+        opciones: ["14,37", "14,36", "14,4", "14,3"],
+        valor: 14.37,
+        pista: "Fíjate en la cifra de las milésimas: si es 5 o mayor, la cifra de las centésimas sube una unidad.",
+        explicacion: "La milésima es 5, así que la centésima 6 sube a 7: 14,37."
+      },
+      {
+        tema: "redondeo",
+        enunciado: "Redondea 8,96 a las décimas.",
+        opciones: ["9,0", "8,9", "8,10", "9,6"],
+        valor: 9,
+        pista: "Mira la centésima. ¿Qué ocurre si a 9 décimas les sumas una décima más?",
+        explicacion: "La centésima es 6 (≥ 5), así que 8,9 sube a 9,0. Diez décimas forman una unidad; por eso no es 8,10."
+      },
+      {
+        tema: "sumaresta",
+        enunciado: "Calcula: 12,5 + 3,75 + 0,8",
+        opciones: ["17,05", "16,13", "16,95", "17,5"],
+        valor: 17.05,
+        pista: "Colócalos en columna con las comas alineadas y completa con ceros: 12,50 · 3,75 · 0,80.",
+        explicacion: "12,50 + 3,75 + 0,80 = 17,05."
+      },
+      {
+        tema: "sumaresta",
+        enunciado: "Calcula: 10 − 3,47",
+        opciones: ["6,53", "7,47", "7,53", "6,63"],
+        valor: 6.53,
+        pista: "Escribe 10 como 10,00 y resta alineando las comas.",
+        explicacion: "10,00 − 3,47 = 6,53. Comprobación: 6,53 + 3,47 = 10."
+      }
+    ]
+  },
+  {
+    nombre: "Multiplicar y dividir",
+    descripcion: "¿Dónde va la coma? Productos y cocientes con decimales, sin calculadora.",
+    preguntas: [
+      {
+        tema: "multiplicacion",
+        enunciado: "Calcula: 2,4 × 0,35",
+        opciones: ["0,84", "8,4", "0,084", "84"],
+        valor: 0.84,
+        pista: "Multiplica 24 × 35 sin comas y después cuenta cuántas cifras decimales tienen los dos factores juntos.",
+        explicacion: "24 × 35 = 840. Hay 1 + 2 = 3 cifras decimales: 0,840 = 0,84."
+      },
+      {
+        tema: "division",
+        enunciado: "Calcula: 7,2 : 0,08",
+        opciones: ["90", "9", "0,9", "900"],
+        valor: 90,
+        pista: "Multiplica el dividendo y el divisor por 100 para que el divisor no tenga coma.",
+        explicacion: "7,2 : 0,08 = 720 : 8 = 90."
+      },
+      {
+        tema: "multiplicacion",
+        enunciado: "Calcula: 0,6 × 0,6 × 0,5",
+        opciones: ["0,18", "1,8", "0,018", "0,3"],
+        valor: 0.18,
+        pista: "Multiplica de dos en dos: empieza por 0,6 × 0,6.",
+        explicacion: "0,6 × 0,6 = 0,36 y 0,36 × 0,5 = 0,18."
+      },
+      {
+        tema: "multiplicacion",
+        enunciado: "¿Qué número multiplicado por 0,1 da 4,5?",
+        opciones: ["45", "0,45", "450", "4,6"],
+        valor: 45,
+        pista: "Multiplicar por 0,1 es lo mismo que dividir entre 10. ¿Qué operación deshace eso?",
+        explicacion: "Si un número × 0,1 = 4,5, ese número es 4,5 × 10 = 45. Comprobación: 45 × 0,1 = 4,5."
+      },
+      {
+        tema: "division",
+        enunciado: "Calcula: 3,15 : 0,5",
+        opciones: ["6,3", "0,63", "1,575", "63"],
+        valor: 6.3,
+        pista: "Dividir entre 0,5 es lo mismo que multiplicar por 2.",
+        explicacion: "3,15 : 0,5 = 31,5 : 5 = 6,3. También: 3,15 × 2 = 6,3."
+      },
+      {
+        tema: "sumaresta",
+        enunciado: "Calcula: 15,02 − 7,385",
+        opciones: ["7,635", "8,365", "7,365", "8,635"],
+        valor: 7.635,
+        pista: "Escribe 15,02 como 15,020 para que los dos números tengan tres cifras decimales.",
+        explicacion: "15,020 − 7,385 = 7,635. Comprobación: 7,635 + 7,385 = 15,020."
+      }
+    ]
+  },
+  {
+    nombre: "Operaciones combinadas",
+    descripcion: "Paréntesis, multiplicaciones y divisiones antes que sumas y restas. ¡Ojo con el orden!",
+    preguntas: [
+      {
+        tema: "combinadas",
+        enunciado: "Calcula: 2,5 + 1,5 × 4",
+        opciones: ["8,5", "16", "10", "7"],
+        valor: 8.5,
+        pista: "Recuerda la jerarquía: las multiplicaciones se hacen antes que las sumas.",
+        explicacion: "Primero 1,5 × 4 = 6; después 2,5 + 6 = 8,5."
+      },
+      {
+        tema: "combinadas",
+        enunciado: "Calcula: (4,2 − 1,7) × 0,4",
+        opciones: ["1", "3,52", "0,1", "10"],
+        valor: 1,
+        pista: "Empieza por el paréntesis.",
+        explicacion: "4,2 − 1,7 = 2,5 y 2,5 × 0,4 = 1."
+      },
+      {
+        tema: "combinadas",
+        enunciado: "Calcula: 6 − 1,2 : 0,4",
+        opciones: ["3", "12", "5,7", "4,8"],
+        valor: 3,
+        pista: "La división va antes que la resta. Para dividir entre 0,4, multiplica dividendo y divisor por 10.",
+        explicacion: "1,2 : 0,4 = 12 : 4 = 3; después 6 − 3 = 3."
+      },
+      {
+        tema: "combinadas",
+        enunciado: "Calcula: 0,5 × (3,6 + 2,4) − 1,25",
+        opciones: ["1,75", "2,95", "4,75", "1,25"],
+        valor: 1.75,
+        pista: "Orden: paréntesis, después la multiplicación y, por último, la resta.",
+        explicacion: "3,6 + 2,4 = 6; 0,5 × 6 = 3; 3 − 1,25 = 1,75."
+      },
+      {
+        tema: "redondeo",
+        enunciado: "Calcula 5 : 8 y redondea el resultado a las centésimas.",
+        opciones: ["0,63", "0,62", "1,6", "0,6"],
+        valor: 0.63,
+        pista: "Haz la división sacando tres cifras decimales y luego mira la milésima.",
+        explicacion: "5 : 8 = 0,625. La milésima es 5, así que se redondea a 0,63."
+      },
+      {
+        tema: "combinadas",
+        enunciado: "Calcula: 1,8 : 0,3 + 0,2 × 15",
+        opciones: ["9", "93", "0,9", "6,3"],
+        valor: 9,
+        pista: "Resuelve la división y la multiplicación por separado y suma al final.",
+        explicacion: "1,8 : 0,3 = 6 y 0,2 × 15 = 3; 6 + 3 = 9."
+      }
+    ]
+  },
+  {
+    nombre: "Problemas de la vida real",
+    descripcion: "Dinero, medidas y cantidades. Lee con calma, decide la operación y comprueba si el resultado tiene sentido.",
+    preguntas: [
+      {
+        tema: "problemas",
+        enunciado: "Compras 3 cuadernos a 2,35 € cada uno y un bolígrafo de 1,20 €. Pagas con un billete de 10 €. ¿Cuánto te devuelven?",
+        opciones: ["1,75 €", "2,75 €", "0,75 €", "6,45 €"],
+        valor: 1.75,
+        pista: "Calcula primero cuánto gastas en total y réstalo de 10 €.",
+        explicacion: "3 × 2,35 = 7,05; 7,05 + 1,20 = 8,25; 10 − 8,25 = 1,75 €."
+      },
+      {
+        tema: "problemas",
+        enunciado: "Una cuerda de 7,5 m se corta en trozos de 0,25 m. ¿Cuántos trozos se obtienen?",
+        opciones: ["30 trozos", "3 trozos", "300 trozos", "25 trozos"],
+        valor: 30,
+        pista: "¿Cuántas veces cabe 0,25 en 7,5? Piensa cuántos cuartos de metro hay en 1 metro.",
+        explicacion: "7,5 : 0,25 = 750 : 25 = 30 trozos (4 trozos por metro × 7,5 m = 30)."
+      },
+      {
+        tema: "problemas",
+        enunciado: "La gasolina cuesta 1,58 € el litro. ¿Cuánto cuesta llenar un depósito de 40 litros?",
+        opciones: ["63,20 €", "6,32 €", "632 €", "41,58 €"],
+        valor: 63.2,
+        pista: "Multiplica 1,58 × 4 y luego multiplica el resultado por 10.",
+        explicacion: "1,58 × 4 = 6,32 y 6,32 × 10 = 63,20 €."
+      },
+      {
+        tema: "problemas",
+        enunciado: "Una botella de 1,5 L de zumo se reparte en vasos de 0,2 L. ¿Cuántos vasos se llenan completos y cuánto zumo sobra?",
+        opciones: ["7 vasos y sobran 0,1 L", "7,5 vasos y no sobra nada", "8 vasos y sobran 0,1 L", "7 vasos y sobran 0,3 L"],
+        valor: null,
+        pista: "Calcula cuánto ocupan 7 vasos y cuánto ocuparían 8. ¿Hay zumo suficiente para el 8.º?",
+        explicacion: "7 vasos ocupan 7 × 0,2 = 1,4 L y sobran 1,5 − 1,4 = 0,1 L. Para 8 vasos harían falta 1,6 L."
+      },
+      {
+        tema: "problemas",
+        enunciado: "Un ciclista recorre 12,6 km en 0,6 horas a velocidad constante. ¿Cuántos kilómetros recorre en 1 hora?",
+        opciones: ["21 km", "7,56 km", "2,1 km", "13,2 km"],
+        valor: 21,
+        pista: "Si en 0,6 h hace 12,6 km, divide para saber cuánto hace en 1 h.",
+        explicacion: "12,6 : 0,6 = 126 : 6 = 21 km en una hora."
+      },
+      {
+        tema: "problemas",
+        enunciado: "0,8 kg de queso cuestan 9,60 €. ¿Cuánto cuesta 1 kg de ese queso?",
+        opciones: ["12 €", "7,68 €", "1,20 €", "10,40 €"],
+        valor: 12,
+        pista: "Para conocer el precio de 1 kg, divide el precio total entre los kilos comprados.",
+        explicacion: "9,60 : 0,8 = 96 : 8 = 12 € el kilo."
+      }
+    ]
+  }
+];
+
+/* Recomendaciones según el tema en el que haya habido fallos (editables). */
+const RECOMENDACIONES = {
+  comparacion: "Comparar y ordenar: iguala el número de decimales añadiendo ceros antes de comparar (0,7 = 0,700).",
+  redondeo: "Redondeo: localiza la cifra a la que redondeas y mira solo la siguiente; si es 5 o más, sube una unidad.",
+  sumaresta: "Sumas y restas: alinea siempre las comas en columna y completa con ceros los huecos.",
+  multiplicacion: "Multiplicación: multiplica sin comas y coloca la coma contando los decimales de todos los factores.",
+  division: "División: multiplica dividendo y divisor por 10, 100… hasta que el divisor no tenga coma.",
+  combinadas: "Operaciones combinadas: paréntesis → multiplicaciones y divisiones → sumas y restas.",
+  problemas: "Problemas: subraya los datos, decide la operación y comprueba si el resultado es razonable."
+};
+
+/* Mensajes de ánimo (editables). */
+const MENSAJES = {
+  aciertoPrimera: ["¡Excelente razonamiento!", "¡Muy bien! Cálculo preciso.", "¡Correcto! Vas muy bien.", "¡Perfecto! Sigue así."],
+  aciertoSegunda: ["¡Bien corregido! Has sabido rectificar.", "¡Eso es! Revisar el cálculo ha merecido la pena."],
+  primerFallo: "Buen intento. Tienes otra oportunidad.",
+  segundoFallo: "No pasa nada: lee la explicación y sigue adelante."
+};
+
+/* =========================================================
+   LÓGICA DEL JUEGO (no hace falta tocarla para editar preguntas)
+   ========================================================= */
+const $ = (id) => document.getElementById(id);
+const LETRAS = ["A", "B", "C", "D"];
+
+const estado = {
+  modoReto: false,
+  partida: [],      // preguntas de la partida
+  indice: 0,
+  puntos: 0,
+  fallos: 0,        // fallos en la pregunta actual
+  resuelta: false,
+  inicio: 0
+};
+
+function barajar(lista) {
+  const copia = lista.slice();
+  for (let i = copia.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copia[i], copia[j]] = [copia[j], copia[i]];
+  }
+  return copia;
+}
+
+function aleatorio(lista) { return lista[Math.floor(Math.random() * lista.length)]; }
+
+/* Convierte un texto con UN número (admite coma o punto, y unidades como "€") en número.
+   Devuelve NaN si no hay exactamente un número. */
+function leerNumero(texto) {
+  const limpio = String(texto).trim().replace(/\s+/g, "");
+  const encontrados = limpio.match(/-?\d+(?:[.,]\d+)?|-?[.,]\d+/g) || [];
+  if (encontrados.length !== 1) return NaN;
+  // Solo se permiten unidades o símbolos alrededor del número, no otras cifras ni signos extraños
+  const resto = limpio.replace(encontrados[0], "");
+  if (/[\d.,]/.test(resto)) return NaN;
+  return parseFloat(encontrados[0].replace(",", "."));
+}
+
+function iguales(a, b) { return Math.abs(a - b) < 1e-9; }
+
+/* ¿El error parece un fallo de colocación de la coma? (resultado ×10, ×100, ×1000 o ÷) */
+function errorDeComa(respuesta, correcto) {
+  if (!isFinite(respuesta) || !isFinite(correcto) || respuesta === 0 || correcto === 0) return false;
+  const r = respuesta / correcto;
+  return [10, 100, 1000, 0.1, 0.01, 0.001].some((f) => Math.abs(r - f) < 1e-9 * Math.max(1, f));
+}
+
+function mostrarPantalla(id) {
+  ["pantalla-inicio", "pantalla-nivel", "pantalla-juego", "pantalla-final"].forEach((p) => {
+    $(p).hidden = p !== id;
+  });
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function prepararPartida() {
+  estado.partida = [];
+  NIVELES.forEach((nivel, n) => {
+    const elegidas = barajar(nivel.preguntas).slice(0, CONFIG.PREGUNTAS_POR_NIVEL);
+    elegidas.forEach((p) => {
+      const opciones = barajar(p.opciones.map((texto, i) => ({ texto, correcta: i === 0 })));
+      estado.partida.push({ datos: p, nivel: n, opciones, puntos: 0, acertada: false, intentos: 0 });
+    });
+  });
+  estado.indice = 0;
+  estado.puntos = 0;
+  estado.inicio = Date.now();
+  $("m-puntos").textContent = "0";
+  $("m-total").textContent = String(estado.partida.length);
+}
+
+function mostrarNivel(n) {
+  const nivel = NIVELES[n];
+  $("nivel-etiqueta").textContent = "Nivel " + (n + 1) + " de " + NIVELES.length;
+  $("nivel-num").textContent = String(n + 1);
+  $("nivel-titulo").textContent = nivel.nombre;
+  $("nivel-descripcion").textContent = nivel.descripcion;
+  mostrarPantalla("pantalla-nivel");
+  $("btn-empezar-nivel").focus();
+}
+
+const NOMBRES_TEMA = {
+  comparacion: "Comparación y orden", redondeo: "Redondeo", sumaresta: "Suma y resta",
+  multiplicacion: "Multiplicación", division: "División", combinadas: "Operaciones combinadas",
+  problemas: "Problema"
+};
+
+function mostrarPregunta() {
+  const actual = estado.partida[estado.indice];
+  const p = actual.datos;
+  estado.fallos = 0;
+  estado.resuelta = false;
+
+  mostrarPantalla("pantalla-juego");
+  const tarjeta = $("tarjeta-pregunta");
+  tarjeta.style.animation = "none"; void tarjeta.offsetWidth; tarjeta.style.animation = "";
+
+  $("m-nivel").textContent = String(actual.nivel + 1);
+  $("m-pregunta").textContent = String(estado.indice + 1);
+  actualizarProgreso(estado.indice);
+
+  $("p-tema").textContent = NOMBRES_TEMA[p.tema] || "Pregunta";
+  $("p-enunciado").textContent = p.enunciado;
+  $("p-pista").hidden = true;
+  $("p-pista").textContent = p.pista;
+  $("btn-pista").disabled = false;
+  $("p-feedback").hidden = true;
+  $("btn-siguiente").hidden = true;
+
+  const escribir = estado.modoReto && typeof p.valor === "number";
+  const contOpciones = $("p-opciones");
+  contOpciones.replaceChildren();
+  contOpciones.hidden = escribir;
+  $("p-escribir").hidden = !escribir;
+
+  if (escribir) {
+    const input = $("input-respuesta");
+    input.value = "";
+    input.disabled = false;
+    input.className = "";
+    $("btn-comprobar").disabled = false;
+    input.focus();
+  } else {
+    actual.opciones.forEach((op, i) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "opcion";
+      const letra = document.createElement("span");
+      letra.className = "letra";
+      letra.textContent = LETRAS[i];
+      const txt = document.createElement("span");
+      txt.textContent = op.texto;
+      b.append(letra, txt);
+      b.addEventListener("click", () => responderOpcion(i, b));
+      contOpciones.appendChild(b);
+    });
+    contOpciones.firstChild.focus({ preventScroll: true });
+  }
+}
+
+function actualizarProgreso(hechas) {
+  const pct = Math.round((hechas / estado.partida.length) * 100);
+  $("barra").style.width = pct + "%";
+  document.querySelector(".progreso").setAttribute("aria-valuenow", String(pct));
+}
+
+function sumarPuntos(cantidad) {
+  estado.puntos += cantidad;
+  const m = $("m-puntos");
+  m.textContent = String(estado.puntos);
+  m.classList.remove("puntos-anim"); void m.offsetWidth; m.classList.add("puntos-anim");
+}
+
+function mostrarFeedback(tipo, titulo, texto) {
+  const fb = $("p-feedback");
+  fb.className = "feedback " + tipo;
+  fb.hidden = false;
+  $("fb-titulo").textContent = titulo;
+  $("fb-texto").textContent = texto;
+}
+
+/* Gestiona un acierto o un fallo, sea con opciones o escribiendo. */
+function procesarRespuesta(esCorrecta, valorRespondido) {
+  const actual = estado.partida[estado.indice];
+  const p = actual.datos;
+  actual.intentos++;
+
+  if (esCorrecta) {
+    const ganados = estado.fallos === 0 ? CONFIG.PUNTOS_PRIMER_INTENTO : CONFIG.PUNTOS_SEGUNDO_INTENTO;
+    actual.puntos = ganados;
+    actual.acertada = true;
+    sumarPuntos(ganados);
+    const titulo = estado.fallos === 0 ? aleatorio(MENSAJES.aciertoPrimera) : aleatorio(MENSAJES.aciertoSegunda);
+    mostrarFeedback("ok", titulo + "  +" + ganados + " puntos", p.explicacion);
+    terminarPregunta();
+    return;
+  }
+
+  estado.fallos++;
+  const pistaComa = typeof p.valor === "number" && errorDeComa(valorRespondido, p.valor)
+    ? " Revisa la posición de la coma." : "";
+
+  if (estado.fallos === 1) {
+    mostrarFeedback("aviso", MENSAJES.primerFallo, ("Vuelve a revisar el cálculo." + pistaComa).trim());
+  } else {
+    const correcta = actual.opciones.find((o) => o.correcta).texto;
+    mostrarFeedback("mal", MENSAJES.segundoFallo, "La respuesta correcta es " + correcta + ". " + p.explicacion);
+    terminarPregunta(true);
+  }
+}
+
+function responderOpcion(i, boton) {
+  if (estado.resuelta || boton.disabled) return;
+  const actual = estado.partida[estado.indice];
+  const op = actual.opciones[i];
+  if (op.correcta) {
+    boton.classList.add("correcta");
+  } else {
+    boton.classList.add("incorrecta");
+    boton.disabled = true;
+  }
+  procesarRespuesta(op.correcta, leerNumero(op.texto));
+}
+
+function responderEscrito(evento) {
+  evento.preventDefault();
+  if (estado.resuelta) return;
+  const input = $("input-respuesta");
+  const p = estado.partida[estado.indice].datos;
+  const numero = leerNumero(input.value);
+  if (isNaN(numero)) {
+    mostrarFeedback("aviso", "Escribe un solo número", "Por ejemplo: 2,5 o 2.5 (sin operaciones).");
+    input.focus();
+    return;
+  }
+  const correcta = iguales(numero, p.valor);
+  input.className = correcta ? "correcta" : "incorrecta";
+  if (!correcta) { void input.offsetWidth; }
+  procesarRespuesta(correcta, numero);
+  if (!estado.resuelta) { input.select(); }
+}
+
+function terminarPregunta(conError) {
+  estado.resuelta = true;
+  const actual = estado.partida[estado.indice];
+  // Resalta la opción correcta y bloquea el resto
+  document.querySelectorAll("#p-opciones .opcion").forEach((b, i) => {
+    b.disabled = true;
+    if (actual.opciones[i].correcta) b.classList.add("correcta");
+  });
+  const input = $("input-respuesta");
+  input.disabled = true;
+  $("btn-comprobar").disabled = true;
+  if (conError && !$("p-escribir").hidden) input.className = "incorrecta";
+  $("btn-pista").disabled = true;
+  actualizarProgreso(estado.indice + 1);
+
+  const ultima = estado.indice === estado.partida.length - 1;
+  const cambiaNivel = !ultima && estado.partida[estado.indice + 1].nivel !== actual.nivel;
+  $("btn-siguiente").textContent = ultima ? "Ver resultados →" : cambiaNivel ? "Siguiente nivel →" : "Siguiente →";
+  $("btn-siguiente").hidden = false;
+  $("btn-siguiente").focus({ preventScroll: true });
+}
+
+function siguiente() {
+  const actual = estado.partida[estado.indice];
+  estado.indice++;
+  if (estado.indice >= estado.partida.length) { mostrarFinal(); return; }
+  if (estado.partida[estado.indice].nivel !== actual.nivel) {
+    mostrarNivel(estado.partida[estado.indice].nivel);
+  } else {
+    mostrarPregunta();
+  }
+}
+
+function mostrarFinal() {
+  const total = estado.partida.length;
+  const max = total * CONFIG.PUNTOS_PRIMER_INTENTO;
+  const aciertos = estado.partida.filter((q) => q.acertada).length;
+  const primera = estado.partida.filter((q) => q.acertada && q.intentos === 1).length;
+  const pct = Math.round((aciertos / total) * 100);
+  const minutos = Math.max(1, Math.round((Date.now() - estado.inicio) / 60000));
+
+  $("f-puntos").textContent = String(estado.puntos);
+  $("f-max").textContent = String(max);
+  $("f-porcentaje").textContent = pct + " %";
+  $("f-primera").textContent = primera + "/" + total;
+
+  let mensaje;
+  if (pct >= 90) mensaje = "¡Excelente! Dominas los números decimales.";
+  else if (pct >= 70) mensaje = "¡Muy buen trabajo! Con un pequeño repaso lo bordarás.";
+  else if (pct >= 50) mensaje = "Buen esfuerzo. Vas por buen camino; repasa los puntos de abajo.";
+  else mensaje = "Has dado el primer paso. Repasa las recomendaciones y vuelve a intentarlo: mejorarás seguro.";
+  $("f-mensaje").textContent = mensaje + " Tiempo: " + minutos + " min.";
+
+  // Aciertos por nivel
+  const contNiveles = $("f-niveles");
+  contNiveles.replaceChildren();
+  NIVELES.forEach((nivel, n) => {
+    const preguntas = estado.partida.filter((q) => q.nivel === n);
+    const ok = preguntas.filter((q) => q.acertada).length;
+    const fila = document.createElement("div");
+    fila.className = "fila-nivel";
+    const nombre = document.createElement("span");
+    nombre.textContent = "Nivel " + (n + 1);
+    const barra = document.createElement("div");
+    barra.className = "barra-nivel";
+    const relleno = document.createElement("div");
+    relleno.style.width = "0%";
+    barra.appendChild(relleno);
+    const dato = document.createElement("span");
+    dato.textContent = ok + "/" + preguntas.length;
+    fila.append(nombre, barra, dato);
+    contNiveles.appendChild(fila);
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      relleno.style.width = Math.round((ok / preguntas.length) * 100) + "%";
+    }));
+  });
+
+  // Recomendaciones: temas con algún fallo o acierto solo al segundo intento
+  const temasFlojos = [];
+  estado.partida.forEach((q) => {
+    if ((!q.acertada || q.intentos > 1) && !temasFlojos.includes(q.datos.tema)) temasFlojos.push(q.datos.tema);
+  });
+  const lista = $("f-recomendaciones");
+  lista.replaceChildren();
+  const textos = temasFlojos.length
+    ? temasFlojos.map((t) => RECOMENDACIONES[t]).filter(Boolean)
+    : ["¡Todo perfecto a la primera! Prueba el modo reto, escribiendo tú las respuestas.",
+       "Ayuda a un compañero: explicar un cálculo es la mejor forma de afianzarlo."];
+  if (temasFlojos.length) textos.push("Comprueba siempre tus resultados con la operación inversa (por ejemplo, la resta con una suma).");
+  textos.forEach((t) => {
+    const li = document.createElement("li");
+    li.textContent = t;
+    lista.appendChild(li);
+  });
+
+  // Revisión de preguntas
+  const rev = $("f-revision");
+  rev.replaceChildren();
+  estado.partida.forEach((q, i) => {
+    const div = document.createElement("div");
+    div.className = "item-rev";
+    const marca = document.createElement("span");
+    marca.className = "marca " + (q.acertada ? "si" : "no");
+    marca.textContent = q.acertada ? "✓" : "✗";
+    const texto = document.createElement("span");
+    const correcta = q.opciones.find((o) => o.correcta).texto;
+    texto.textContent = (i + 1) + ". " + q.datos.enunciado + " → " + correcta + " (" + q.puntos + " puntos)";
+    div.append(marca, texto);
+    rev.appendChild(div);
+  });
+
+  mostrarPantalla("pantalla-final");
+}
+
+/* ----- Eventos ----- */
+function elegirModo(reto) {
+  estado.modoReto = reto;
+  $("modo-opciones").setAttribute("aria-pressed", String(!reto));
+  $("modo-reto").setAttribute("aria-pressed", String(reto));
+}
+$("modo-opciones").addEventListener("click", () => elegirModo(false));
+$("modo-reto").addEventListener("click", () => elegirModo(true));
+
+$("btn-comenzar").addEventListener("click", () => { prepararPartida(); mostrarNivel(0); });
+$("btn-empezar-nivel").addEventListener("click", mostrarPregunta);
+$("btn-siguiente").addEventListener("click", siguiente);
+$("form-escribir").addEventListener("submit", responderEscrito);
+$("btn-pista").addEventListener("click", () => {
+  $("p-pista").hidden = false;
+  $("btn-pista").disabled = true;
+});
+$("btn-reiniciar").addEventListener("click", () => { prepararPartida(); mostrarNivel(0); });
+
+// Atajos de teclado: teclas 1-4 o A-D para elegir opción
+document.addEventListener("keydown", (e) => {
+  if ($("pantalla-juego").hidden || estado.resuelta || !$("p-escribir").hidden) return;
+  const tecla = e.key.toUpperCase();
+  let i = ["1", "2", "3", "4"].indexOf(tecla);
+  if (i === -1) i = LETRAS.indexOf(tecla);
+  const botones = document.querySelectorAll("#p-opciones .opcion");
+  if (i >= 0 && botones[i] && !botones[i].disabled) botones[i].click();
+});
+
+$("txt-p1").textContent = String(CONFIG.PUNTOS_PRIMER_INTENTO);
+$("txt-p2").textContent = String(CONFIG.PUNTOS_SEGUNDO_INTENTO);
+
+/* =========================================================
+   SOLUCIONES PARA EL PROFESOR (no se muestran en pantalla)
+   ---------------------------------------------------------
+   NIVEL 1 · Comparar, redondear, sumar y restar
+     1. Mayor de 3,9 / 3,099 / 3,09 / 3,089 ........ 3,9
+     2. Orden de 0,7 · 0,07 · 0,707 · 0,77 ......... 0,07 < 0,7 < 0,707 < 0,77
+     3. 14,365 a las centésimas ..................... 14,37
+     4. 8,96 a las décimas .......................... 9,0
+     5. 12,5 + 3,75 + 0,8 ........................... 17,05
+     6. 10 − 3,47 ................................... 6,53
+   NIVEL 2 · Multiplicar y dividir
+     1. 2,4 × 0,35 .................................. 0,84
+     2. 7,2 : 0,08 .................................. 90
+     3. 0,6 × 0,6 × 0,5 ............................. 0,18
+     4. Número que × 0,1 da 4,5 ..................... 45
+     5. 3,15 : 0,5 .................................. 6,3
+     6. 15,02 − 7,385 ............................... 7,635
+   NIVEL 3 · Operaciones combinadas
+     1. 2,5 + 1,5 × 4 ............................... 8,5
+     2. (4,2 − 1,7) × 0,4 ........................... 1
+     3. 6 − 1,2 : 0,4 ............................... 3
+     4. 0,5 × (3,6 + 2,4) − 1,25 .................... 1,75
+     5. 5 : 8 redondeado a centésimas ............... 0,63 (5 : 8 = 0,625)
+     6. 1,8 : 0,3 + 0,2 × 15 ........................ 9
+   NIVEL 4 · Problemas de la vida real
+     1. Cuadernos y bolígrafo, cambio de 10 € ....... 1,75 €
+     2. Cuerda de 7,5 m en trozos de 0,25 m ......... 30 trozos
+     3. 40 L de gasolina a 1,58 €/L ................. 63,20 €
+     4. 1,5 L de zumo en vasos de 0,2 L ............. 7 vasos y sobran 0,1 L
+     5. Ciclista: 12,6 km en 0,6 h .................. 21 km en 1 hora
+     6. 0,8 kg de queso por 9,60 € .................. 12 € el kilo
+   ========================================================= */
+</script>
+</body>
+</html>
